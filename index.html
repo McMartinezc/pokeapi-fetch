@@ -21,13 +21,19 @@
     </div>
     <div class="container">
         <div class="input-group mb-3">
+            <span class="input-group-text" id="pokemon-count-label">Number of Pokémon</span>
+            <input type="number" id="pokemon-count" class="form-control" aria-label="Number of Pokémon"
+                aria-describedby="pokemon-count-label">
+        </div>
+        
+        <div class="input-group mb-3">
             <span class="input-group-text" id="selected-pokemon-label">Which pokemon do you want to display?</span>
             <select id="select-pokemon" class="form-select" aria-label="selected pokemon"
                 aria-describedby="selected-pokemon-label">
                 <option selected>Select one pokemon</option>
-                <option value="pikachu">Pikachu</option>
+                <!-- <option value="pikachu">Pikachu</option>
                 <option value="charmander">Charmander</option>
-                <option value="luxio">Luxio</option>
+                <option value="luxio">Luxio</option> -->
             </select>
         </div>
     </div>
@@ -41,25 +47,52 @@
 
     // 3. Utilizar la función fetch para hacer la llamada a esa URL
     // y procesar los datos. Significa, asignar al <h5> del DOM el nombre del pokemon que hemos recuperado de la llamada. Y en la etiqueta <img> debemos establecer el atricuto 'src' con el valor de la URL donde se ubica la imagen del pokemon
-        
-    const selectPokemon = document.getElementById("select-pokemon");
+
     const buttonShiny = document.querySelector(".btn");
+    const input = document.querySelector("#pokemon-count");
+    const selectPokemon = document.getElementById("select-pokemon");
     const image = document.querySelector(".card-img-top");
 
-    selectPokemon.addEventListener("change", () => {
+    // Evento cuando el usuario ingresa el número de Pokémon
+    input.addEventListener("input", async()=>{
+        const number = +input.value;
+        const urlLimit = `https://pokeapi.co/api/v2/pokemon?limit=${number}`;
+
+        const pokemonList = await fetchData(urlLimit);
+        numberPokemonSelect(pokemonList.results);
+    })
+
+    selectPokemon.addEventListener("change", async() => {
         const selectedPokemon = selectPokemon.value.toLowerCase();
         let urlSelection = `https://pokeapi.co/api/v2/pokemon/${selectedPokemon}`;
-        fetchData(urlSelection);
+        const dataPokemon = await fetchData(urlSelection);
+        paintPokemon(dataPokemon);
     });
 
+    //Función obtener datos API
     const fetchData = async (url) => {
         const response = await fetch(url);
         const data = await response.json();
-        paintPokemon(data);
+        console.log(data);
+        return data;
     };
 
+    //Función rellenar campos option
+    const numberPokemonSelect = (pokemonList)=>{
+        const selectPokemon = document.getElementById("select-pokemon");
+
+        pokemonList.forEach(pokemon => {
+            const option = document.createElement("option");
+            option.value = pokemon.name;
+            option.textContent = pokemon.name;
+            selectPokemon.appendChild(option); 
+        });
+    }
+
+    //Muestra pokemon seleccionado
     const paintPokemon = (dataPokemon) => {
         const title = document.querySelector(".card-title");
+        const image = document.querySelector(".card-img-top");
 
         title.textContent = dataPokemon.name;
         image.src = dataPokemon.sprites.front_default;
